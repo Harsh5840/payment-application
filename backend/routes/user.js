@@ -1,6 +1,6 @@
 const express = require("express");
 const { Router } = require("express");
-const userModel = require('../schema/db');
+const {User , Account} = require('../schema/db');
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const {JSON_WEB_TOKEN_SECRET} = require('../config');
@@ -30,15 +30,15 @@ userRouter.post("/signup", async function (req, res) {
 
     const hashpassword = await bcrypt.hash(password, saltRounds);
 
-    await userModel.create({
+    await User.create({
         email: email,
         password: hashpassword,
         username: username
     });
 
-    const userId = user._id;        //we are getting the id of the user
+    const userId = User._id        //we are getting the id of the user
 
-    await accountModel.create({
+    await Account.create({
         userId,
         balance: 1 + Math.random() * 10000
     })
@@ -61,7 +61,7 @@ userRouter.post("/signin", async function (req, res) {
     });
     const { email, password} = userbody.parse(req.body);
     try {
-        const user = await userModel.findOne({
+        const user = await User.findOne({
             email: email
         })
         if (!user) {
@@ -108,7 +108,7 @@ userRouter.put("/", authMiddleware ,async function (req, res) {    //here we use
     });    
     const { email, password, username } = userbody.parse(req.body);
     try{
-   await userModel.updateOne({email: email}, {username: username, email: email, password: password})
+   await User.updateOne({email: email}, {username: username, email: email, password: password})
         res.json({
             message: "User updated successfully"
         })
@@ -123,7 +123,7 @@ userRouter.put("/", authMiddleware ,async function (req, res) {    //here we use
 userRouter.get("/bulk"  , async function (req, res) {
     const filter = req.query.filter || "";
     try{
-        const users = await userModel.find({
+        const users = await User.find({
             username:{
                 "$regex": filter
             }
