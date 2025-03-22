@@ -13,14 +13,14 @@ const userSchema = new schema({
 const accountSchema = new schema({
     userId: {
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'User'
+        ref: "User",
+        required: true, // Ensure it is required
     },
     balance: {
         type: Number,
-        required: true
+        required: true,
     }
-    }
-)
+});
 
 const User = mongoose.model('User', userSchema)
 const Account = mongoose.model('Account', accountSchema)

@@ -12,42 +12,51 @@ const {authMiddleware} = require('../middlewares/middleware');
 userRouter.use(express.json());
 
 userRouter.post("/signup", async function (req, res) {
-    const userbody = z.object({
-        email: z.string().email({
-            required_error: "Email required",
-            invalid_type_error: "Enter valid Email",
-        }),
-        password: z.string()
-            .min(6, { message: "min 6 characters are required" })
-            .max(100, { message: "max 100 characters are required" }),
+    try {
+        const userbody = z.object({
+            email: z.string().email({
+                required_error: "Email required",
+                invalid_type_error: "Enter valid Email",
+            }),
+            password: z.string()
+                .min(6, { message: "Min 6 characters are required" })
+                .max(100, { message: "Max 100 characters are required" }),
+            username: z.string({
+                required_error: "Username required",
+                invalid_type_error: "Enter a string"
+            })
+        });
 
-        username: z.string({
-            required_error: "userName required",
-            invalid_type_error: "enter string"
-        })
-    });
-    const { email, password, username } = userbody.parse(req.body);
+        const { email, password, username } = userbody.parse(req.body);
+        const hashpassword = await bcrypt.hash(password, saltRounds);
 
-    const hashpassword = await bcrypt.hash(password, saltRounds);
+        // ✅ Save user and get `_id`
+        const user = await User.create({
+            email,
+            password: hashpassword,
+            username
+        });
 
-    await User.create({
-        email: email,
-        password: hashpassword,
-        username: username
-    });
+        // ✅ Use `user._id` to create an account
+        await Account.create({
+            userId: user._id,
+            balance: 1 + Math.random() * 10000
+        });
 
-    const userId = User._id        //we are getting the id of the user
+        // ✅ Generate JWT token with the correct user ID
+        const token = jwt.sign({ id: user._id }, JSON_WEB_TOKEN_SECRET, { expiresIn: "1h" });
 
-    await Account.create({
-        userId,
-        balance: 1 + Math.random() * 10000
-    })
+        res.json({
+            token: token,
+            message: "User signed up successfully"
+        });
 
-    res.json({
-        //jo maal postman me show hoga as a result
-        message: "Signup succeeded",
-    });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: "An unexpected error occurred" });
+    }
 });
+
 
 userRouter.post("/signin", async function (req, res) {
     const userbody = z.object({

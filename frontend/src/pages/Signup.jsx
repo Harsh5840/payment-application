@@ -47,17 +47,30 @@ const Signup = () => {
           </div>
           </div>
           <div className='mt-6'>
-            <Button onClick={async () => {
-               const response = await axios.post("http://localhost:5000/api/v1/user/signup",{
-                    username,
-                    email,
-                    password
-                }); 
-                localStorage.setItem("token" , response.data.token);
+          <Button
+    onClick={async () => {
+        try {
+            const response = await axios.post("http://localhost:5000/api/v1/user/signup", {
+                username,
+                email,
+                password
+            });
+
+            console.log("Signup Response:", response.data); // Debugging
+
+            if (response.data?.token) {
+                localStorage.setItem("token", response.data.token);
+                console.log("Token stored:", response.data.token); // Debugging
                 navigate("/dashboard");
-            }}
-            text={"Sign up"}
-            />
+            } else {
+                console.error("No token received:", response.data);
+            }
+        } catch (error) {
+            console.error("Signup error:", error.response?.data || error.message);
+        }
+    }}
+    text={"Sign up"}
+/>
             </div>
         </div>
     </>
